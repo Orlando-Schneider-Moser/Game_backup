@@ -64,10 +64,11 @@ Player = {
 	"hp":100,
 	"health":64,
 	"maxhp":64,
+	"direction":"Right"
 }
 #- - - - - - - - - - - - - - - - - 
 
-gun = Items.GUN(12)
+gun = Items.GUN(36)
 
 #===============================
 
@@ -84,7 +85,7 @@ Map = [
 	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19],
 	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20],
 	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 21],
-	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22],
+	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22],
 	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23],
 	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 24],
 	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25],
@@ -155,7 +156,7 @@ class enemy:
 
 	def move(self):
 		if Player["x"] > self.x:
-			if Player["y"] < self.y:
+			if Player["y"] <= self.y:
 				# left, top/ bigger, smaller
 				if Player["x"] - self.x > Player["y"] - self.y:
 					print("above, to left/ right")
@@ -186,12 +187,12 @@ class enemy:
 			
 			else:
 				#right, bottom/ smaller, bigger
-				if self.x - Player["x"] > self.y - Player["y"]:
-					print("under, to right / left")
+				if self.x - Player["x"] >= Player["y"] - self.y:
+					print("above, to right / left")
 					self.x = self.x - 16
 				else:
-					print("under, to right / up")
-					self.y = self.y - 16
+					print("above, to right / down")
+					self.y = self.y + 16
 
 	def touchplayer(self):
 		if Player["x"] + 16 == self.x and Player["y"] == self.y:
@@ -204,6 +205,25 @@ class enemy:
 			return True
 		else:
 			return False
+
+	def touchwall(self):
+		for Wall in walllist:
+			if Wall.x + 16 == self.x and Wall.y == self.y:
+				return "left"
+			elif Wall.x - 16 == self.x and Wall.y == self.y:
+				return "right"
+			elif Wall.x == self.x and Wall.y + 16 == self.y:
+				return "above"
+			elif Wall.x == self.x and Wall.y - 16 == self.y:
+				return "under"
+			else:
+				return False
+
+	def moveawayfromwall(self):
+		pass
+
+	def hit(self, damage):
+		self.hp = self.hp - damage
 	
 	def move2player(self, speed):
 		if self.a == speed:
@@ -213,6 +233,8 @@ class enemy:
 			else:
 				if self.touchplayer():
 					pass
+				elif self.touchwall():
+					self.moveawayfromwall()					
 				else:
 					self.move()
 		else:
@@ -314,8 +336,6 @@ class playermovement:
 		
 	
 	def right():
-
-		gun.pew()
 		
 		for E in enemies:
 			E.hp = E.hp-1
@@ -344,6 +364,22 @@ class playermovement:
 #==========================================
 
 walls.makewalls()
+def doUpdate():
+	#check for gameover
+	if Player["health"] <= 0:
+	
+		GameOver = True
+		inGame = False
+
+	
+
+	for E in enemies:
+		E.checkdeath()
+		E.move2player(16)
+
+	for bullet in Items.GUN.bullets:
+		bullet.checkhit(enemies)
+	
 			
 #game loop
 while True:
@@ -367,6 +403,17 @@ while True:
 				playermovement.up()
 			if event.key == pygame.K_DOWN:
 				playermovement.down()
+			if event.key == pygame.K_w:
+				Player["direction"] = "up"
+			if event.key == pygame.K_a:
+				Player["direction"] = "left"
+			if event.key == pygame.K_s:
+				Player["direction"] = "down"
+			if event.key == pygame.K_d:
+				Player["direction"] = "right"
+			if event.key == pygame.K_e:
+				Gun.shoot(Player, enemies)
+				
 		
 		#if you press the little cross at the top
 		if event.type == QUIT:
@@ -374,15 +421,7 @@ while True:
 			pygame.quit()
 			sys.exit()		
 	
-	#check for gameover
-	if Player["health"] <= 0:
 	
-		GameOver = True
-		inGame = False
-
-	for E in enemies:
-		E.checkdeath()
-		E.move2player(16)
 	#draw stuff onto the screen and update
 	draw()
 	pygame.display.update()
