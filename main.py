@@ -142,7 +142,6 @@ class enemy:
 
 	def checkdeath(self):
 		if self.hp <= 0:
-			print("i have perished")
 			enemies.remove(self)
 
 for i in range (2):
