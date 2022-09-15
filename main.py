@@ -40,6 +40,13 @@ Time= pygame.time.Clock()
 #Then a rectangle for the font to be displayed on.
 Gameovr_fnt = pygame.font.SysFont("Garamond", 64)
 Gameovr_rect = pygame.Rect(320-(Gameovr_fnt.size("GAME OVER")[0])/2,180-(Gameovr_fnt.size("GAME OVER")[1])/2,100, 100)
+
+colors = {
+	"zombie":(40, 240, 20),
+	"Player":(240, 200, 125),
+	"hpbar":(255, 1, 1),
+	"hpbarbg":(50, 50, 50)
+}
 #================================
 
 
@@ -109,16 +116,40 @@ class walls:
 
 					
 		
-#==============================================d
+#==============================================
 
 #enemies
+
+enemies = []
+
 class enemy:
-	enemies = []
+	## you can now make an enemy with:
+	#enemy1 = enemy(xpos, ypox, w, h, (color in rgb), "type of enemy")
+	## Then you can use that because in this case self == enemy 
+	## so you can just say enemy1.x to change the x var
+	# enemy1.x += 16
+	## you have just changed its x axis
+	def __init__ (self, x, y, width, heigth, color, type, hp):
+		self.x = x
+		self.y = y
+		self.w = width
+		self.h = heigth
+		self.color = color
+		self.type = type
+		self.hp = hp
+		self.maxhp = hp
+		self.hpbarbg = pygame.Rect(self.x - hp/2 + 7, self.y - 8, hp+2, 6)
 
-	for i in range(2):
-		enemies.append(pygame.Rect(32*(i+1), 104, 16, 16))
+	def checkdeath(self):
+		if self.hp <= 0:
+			print("i have perished")
+			enemies.remove(self)
 
-				
+for i in range (2):
+	enemies.append(enemy(32*(i+1), 104, 16, 16, colors["zombie"], "zombie", 20))
+	
+
+		
 #==============================================
 
 #called every frame.
@@ -130,7 +161,7 @@ def draw():
 		#erase everything by drawing bg
 		DISPLAYSURF.fill((70, 130, 10))
 		
-		#draw player at its location with a width and height and a color(see Player dict)
+		#draw player at its location with a width and height and a color
 		pygame.draw.rect(DISPLAYSURF, Player["color"], pygame.Rect(Player["x"] ,Player["y"], Player["w"], Player["h"]))
 		
 		#draw background of the status bar (hp and maybe more like mana and items later)
@@ -141,14 +172,16 @@ def draw():
 		
 		#draw the hp bar so that it goes down to the left(explanations for more)
 		pygame.draw.rect(DISPLAYSURF, (255, 1, 1), pygame.Rect(640-x.x4(Player["health"])-4, 4, x.x4(Player["health"]), 14))
-
-		#draw all enemies
-		for E in enemy.enemies:
-			pygame.draw.rect(DISPLAYSURF, (50, 225, 70), E)
-
+		
 		#draw every wall
 		for wall in walllist:
 			pygame.draw.rect(DISPLAYSURF, (30, 30, 30), wall)
+
+		#draw all enemies and hp bars
+		for E in enemies:
+			pygame.draw.rect(DISPLAYSURF, E.color, pygame.Rect(E.x, E.y, E.w, E.h))
+			pygame.draw.rect(DISPLAYSURF, colors["hpbarbg"], E.hpbarbg)
+			pygame.draw.rect(DISPLAYSURF, colors["hpbar"], pygame.Rect(E.x - E.maxhp/2 + 8, E.y - 7, E.hp, 4))
 	
 	#if dead
 	elif GameOver:
@@ -184,22 +217,22 @@ class playermovement:
 						hit = False
 
 		#checks if bumped into enemy
-		for b in enemy.enemies:
+		for E in enemies:
 
 			#if its on the x or y axis
 			if xory == "x":
 				#if the next step would be the same position as a block on x axis
-				if b.x == Player["x"] + 16*a:
+				if E.x == Player["x"] + 16*a:
 					#if its on the same y axis
-					if b.y == Player["y"]:
+					if E.y == Player["y"]:
 						#you did hit something :( not good 
 						Player["health"] = Player["health"] - 4
 						hit = False
 
 			#same thing as above but for y axis
 			elif xory == "y":
-				if b.y == Player["y"] - 16*a:
-					if b.x == Player["x"]:
+				if E.y == Player["y"] - 16*a:
+					if E.x == Player["x"]:
 						Player["health"] = Player["health"] - 4
 						hit = False
 		
@@ -209,6 +242,8 @@ class playermovement:
 	
 	def right():
 		
+		for E in enemies:
+			E.hp = E.hp-1
 		#if not going off screen or hitting wall then walk
 		if Player["x"] + 16 < 632:
 			if playermovement.checkwalls("x", 1):
@@ -270,6 +305,8 @@ while True:
 		GameOver = True
 		inGame = False
 
+	for E in enemies:
+		E.checkdeath()
 	#draw stuff onto the screen and update
 	draw()
 	pygame.display.update()

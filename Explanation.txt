@@ -1,4 +1,0 @@
-Hp bar:
-	hp bar = hp * 4 (this is so it goes down with hp)
-	draw the hp bar at the edge od the screen - hpbar lenght - a bit of space for the outline so that it stays on the left)
-	
