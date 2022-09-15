@@ -1,5 +1,6 @@
-import pygame, sys
+import pygame, sys, random, math
 from pygame.locals import QUIT
+import Items
 #please dont read this
 
 
@@ -25,8 +26,11 @@ class x:
 pygame.init()
 pygame.font.init()
 
-#just some vars for the gameover screen
-inGame = True 
+#just some vars for the diffrent screens
+inGame = True
+inStart = False
+inMenu = False
+inInventory = False
 GameOver= False
 
 #display
@@ -61,6 +65,10 @@ Player = {
 	"health":64,
 	"maxhp":64,
 }
+#- - - - - - - - - - - - - - - - - 
+
+gun = Items.GUN(12)
+
 #===============================
 
 #the number at the end is so that every row is unique (i had a problem with that and this solves it)
@@ -138,14 +146,72 @@ class enemy:
 		self.type = type
 		self.hp = hp
 		self.maxhp = hp
-		self.hpbarbg = pygame.Rect(self.x - hp/2 + 7, self.y - 8, hp+2, 6)
+		self.a = 4
 
 	def checkdeath(self):
 		if self.hp <= 0:
+			enemies.append(enemy(16*random.randrange(1, 10), 16*random.randrange(1, 10) + 40, 16, 16, colors["zombie"], "zombie", 20))
 			enemies.remove(self)
 
-for i in range (2):
-	enemies.append(enemy(32*(i+1), 104, 16, 16, colors["zombie"], "zombie", 20))
+	def move2player(self, speed):
+		if self.a == speed:
+			self.a = 0
+			if inInventory == True or inMenu == True:
+				pass
+			else:
+				if Player["x"] + 16 == self.x and Player["y"] == self.y:
+					pass
+				elif Player["x"] - 16 == self.x and Player["y"] == self.y:
+					pass
+				elif Player["x"] == self.x and Player["y"] + 16 == self.y:
+					pass
+				elif Player["x"] == self.x and Player["y"] - 16 == self.y:
+					pass
+				else:
+					if Player["x"] > self.x:
+						
+						if Player["y"] < self.y:
+							# left, top/ bigger, smaller
+							if Player["x"] - self.x > Player["y"] - self.y:
+								print("above, to left/ right")
+								self.x = self.x + 16
+							else:
+								print("above , to left/ down")
+								self.y = self.y + 16
+			
+						else:
+							#left, bottom/ bigger, bigger
+							if Player["x"] - self.x < self.y - Player["y"]:
+								print("under, to left/ right")
+								self.x = self.x - 16
+							else:
+								print("under, to left/ down")
+								self.y = self.y + 16
+							
+					else:
+						
+						if Player["y"] < self.y:
+							#right, top/ smaller, smaller
+							if self.x - Player["x"] > self.y - Player["y"]:
+								print("under, to right / left")
+								self.x = self.x - 16
+							else:
+								print("under, to right / up")
+								self.y = self.y - 16
+			
+						else:
+							#right, bottom/ smaller, bigger
+							if self.x - Player["x"] > self.y - Player["y"]:
+								print("above, to right / left")
+								self.x = self.x - 16
+							else:
+								print("above, to right / up")
+								self.y = self.y - 16
+		else:
+			self.a = self.a + 1
+
+
+enemies.append(enemy(32, 104, 16, 16, colors["zombie"], "zombie", 20))
 	
 
 		
@@ -179,7 +245,7 @@ def draw():
 		#draw all enemies and hp bars
 		for E in enemies:
 			pygame.draw.rect(DISPLAYSURF, E.color, pygame.Rect(E.x, E.y, E.w, E.h))
-			pygame.draw.rect(DISPLAYSURF, colors["hpbarbg"], E.hpbarbg)
+			pygame.draw.rect(DISPLAYSURF, colors["hpbarbg"], pygame.Rect(E.x - E.maxhp/2 + 7, E.y - 7, E.maxhp + 2, 4))
 			pygame.draw.rect(DISPLAYSURF, colors["hpbar"], pygame.Rect(E.x - E.maxhp/2 + 8, E.y - 7, E.hp, 4))
 	
 	#if dead
@@ -240,6 +306,8 @@ class playermovement:
 		
 	
 	def right():
+
+		gun.pew()
 		
 		for E in enemies:
 			E.hp = E.hp-1
@@ -273,7 +341,7 @@ walls.makewalls()
 while True:
 	
 	#framrate
-	Time.tick(60)
+	Time.tick(30)
 	
 	#for every possible event in pygame check the following
 	for event in pygame.event.get():
@@ -306,6 +374,7 @@ while True:
 
 	for E in enemies:
 		E.checkdeath()
+		E.move2player(8)
 	#draw stuff onto the screen and update
 	draw()
 	pygame.display.update()
