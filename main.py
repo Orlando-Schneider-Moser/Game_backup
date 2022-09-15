@@ -153,60 +153,68 @@ class enemy:
 			enemies.append(enemy(16*random.randrange(1, 10), 16*random.randrange(1, 10) + 40, 16, 16, colors["zombie"], "zombie", 20))
 			enemies.remove(self)
 
+	def move(self):
+		if Player["x"] > self.x:
+			if Player["y"] < self.y:
+				# left, top/ bigger, smaller
+				if Player["x"] - self.x > Player["y"] - self.y:
+					print("above, to left/ right")
+					self.x = self.x + 16
+				else:
+					print("above , to left/ down")
+					self.y = self.y + 16
+			
+			else:
+				#left, bottom/ bigger, bigger
+				if Player["x"] - self.x < self.y - Player["y"]:
+					print("above, to left/ right")
+					self.x = self.x - 16
+				else:
+					print("above, to left/ down")
+					self.y = self.y + 16
+							
+		else:
+						
+			if Player["y"] < self.y:
+				#right, top/ smaller, smaller
+				if self.x - Player["x"] > self.y - Player["y"]:
+					print("under, to right / left")
+					self.x = self.x - 16
+				else:
+					print("under, to right / up")
+					self.y = self.y - 16
+			
+			else:
+				#right, bottom/ smaller, bigger
+				if self.x - Player["x"] > self.y - Player["y"]:
+					print("under, to right / left")
+					self.x = self.x - 16
+				else:
+					print("under, to right / up")
+					self.y = self.y - 16
+
+	def touchplayer(self):
+		if Player["x"] + 16 == self.x and Player["y"] == self.y:
+			return True
+		elif Player["x"] - 16 == self.x and Player["y"] == self.y:
+			return True
+		elif Player["x"] == self.x and Player["y"] + 16 == self.y:
+			return True
+		elif Player["x"] == self.x and Player["y"] - 16 == self.y:
+			return True
+		else:
+			return False
+	
 	def move2player(self, speed):
 		if self.a == speed:
 			self.a = 0
 			if inInventory == True or inMenu == True:
 				pass
 			else:
-				if Player["x"] + 16 == self.x and Player["y"] == self.y:
-					pass
-				elif Player["x"] - 16 == self.x and Player["y"] == self.y:
-					pass
-				elif Player["x"] == self.x and Player["y"] + 16 == self.y:
-					pass
-				elif Player["x"] == self.x and Player["y"] - 16 == self.y:
+				if self.touchplayer():
 					pass
 				else:
-					if Player["x"] > self.x:
-						
-						if Player["y"] < self.y:
-							# left, top/ bigger, smaller
-							if Player["x"] - self.x > Player["y"] - self.y:
-								print("above, to left/ right")
-								self.x = self.x + 16
-							else:
-								print("above , to left/ down")
-								self.y = self.y + 16
-			
-						else:
-							#left, bottom/ bigger, bigger
-							if Player["x"] - self.x < self.y - Player["y"]:
-								print("under, to left/ right")
-								self.x = self.x - 16
-							else:
-								print("under, to left/ down")
-								self.y = self.y + 16
-							
-					else:
-						
-						if Player["y"] < self.y:
-							#right, top/ smaller, smaller
-							if self.x - Player["x"] > self.y - Player["y"]:
-								print("under, to right / left")
-								self.x = self.x - 16
-							else:
-								print("under, to right / up")
-								self.y = self.y - 16
-			
-						else:
-							#right, bottom/ smaller, bigger
-							if self.x - Player["x"] > self.y - Player["y"]:
-								print("above, to right / left")
-								self.x = self.x - 16
-							else:
-								print("above, to right / up")
-								self.y = self.y - 16
+					self.move()
 		else:
 			self.a = self.a + 1
 
@@ -245,7 +253,7 @@ def draw():
 		#draw all enemies and hp bars
 		for E in enemies:
 			pygame.draw.rect(DISPLAYSURF, E.color, pygame.Rect(E.x, E.y, E.w, E.h))
-			pygame.draw.rect(DISPLAYSURF, colors["hpbarbg"], pygame.Rect(E.x - E.maxhp/2 + 7, E.y - 7, E.maxhp + 2, 4))
+			pygame.draw.rect(DISPLAYSURF, colors["hpbarbg"], pygame.Rect(E.x - E.maxhp/2 + 7, E.y - 8, E.maxhp + 2, 6))
 			pygame.draw.rect(DISPLAYSURF, colors["hpbar"], pygame.Rect(E.x - E.maxhp/2 + 8, E.y - 7, E.hp, 4))
 	
 	#if dead
@@ -374,7 +382,7 @@ while True:
 
 	for E in enemies:
 		E.checkdeath()
-		E.move2player(8)
+		E.move2player(16)
 	#draw stuff onto the screen and update
 	draw()
 	pygame.display.update()
