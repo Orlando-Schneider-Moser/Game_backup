@@ -32,6 +32,7 @@ inStart = False
 inMenu = False
 inInventory = False
 GameOver= False
+displayammowarning = False
 
 #display
 DISPLAYSURF = pygame.display.set_mode((640, 360))
@@ -56,19 +57,21 @@ colors = {
 
 #Player var using a dictionary
 Player = {
-	"x":16,
-	"y":56,
+	"x":128,
+	"y":40 + 128,
 	"w":16,
 	"h":16,
 	"color":(240, 200, 125),
 	"hp":100,
 	"health":64,
 	"maxhp":64,
-	"direction":"Right"
+	"direction":"Right",
+	"ammo":12,
+	"maxammo": 96
 }
 #- - - - - - - - - - - - - - - - - 
 
-gun = Items.GUN(36)
+gun = Items.GUN(12)
 
 #===============================
 
@@ -151,7 +154,7 @@ class enemy:
 
 	def checkdeath(self):
 		if self.hp <= 0:
-			enemies.append(enemy(16*random.randrange(1, 10), 16*random.randrange(1, 10) + 40, 16, 16, colors["zombie"], "zombie", 20))
+			enemies.append(enemy(16*random.randrange(1, 10), 16*random.randrange(1, 10) + 40, 16, 16, colors["zombie"], "zombie", random.choice((20, 30, 40, 50))))
 			enemies.remove(self)
 
 	def move(self):
@@ -159,19 +162,15 @@ class enemy:
 			if Player["y"] <= self.y:
 				# left, top/ bigger, smaller
 				if Player["x"] - self.x > Player["y"] - self.y:
-					print("above, to left/ right")
 					self.x = self.x + 16
 				else:
-					print("above , to left/ down")
 					self.y = self.y + 16
 			
 			else:
 				#left, bottom/ bigger, bigger
 				if Player["x"] - self.x < self.y - Player["y"]:
-					print("above, to left/ right")
 					self.x = self.x - 16
 				else:
-					print("above, to left/ down")
 					self.y = self.y + 16
 							
 		else:
@@ -179,19 +178,15 @@ class enemy:
 			if Player["y"] < self.y:
 				#right, top/ smaller, smaller
 				if self.x - Player["x"] > self.y - Player["y"]:
-					print("under, to right / left")
 					self.x = self.x - 16
 				else:
-					print("under, to right / up")
 					self.y = self.y - 16
 			
 			else:
 				#right, bottom/ smaller, bigger
 				if self.x - Player["x"] >= Player["y"] - self.y:
-					print("above, to right / left")
 					self.x = self.x - 16
 				else:
-					print("above, to right / down")
 					self.y = self.y + 16
 
 	def touchplayer(self):
@@ -272,11 +267,14 @@ def draw():
 		for wall in walllist:
 			pygame.draw.rect(DISPLAYSURF, (30, 30, 30), wall)
 
+		for bullet in Items.GUN.bullets:
+			pygame.draw.rect(DISPLAYSURF, (255, 200, 0), pygame.Rect(bullet.x, bullet.y, bullet.w, bullet.h))
+
 		#draw all enemies and hp bars
 		for E in enemies:
 			pygame.draw.rect(DISPLAYSURF, E.color, pygame.Rect(E.x, E.y, E.w, E.h))
-			pygame.draw.rect(DISPLAYSURF, colors["hpbarbg"], pygame.Rect(E.x - E.maxhp/2 + 7, E.y - 8, E.maxhp + 2, 6))
-			pygame.draw.rect(DISPLAYSURF, colors["hpbar"], pygame.Rect(E.x - E.maxhp/2 + 8, E.y - 7, E.hp, 4))
+			pygame.draw.rect(DISPLAYSURF, colors["hpbarbg"], pygame.Rect(E.x - E.maxhp/4 + 7, E.y - 8, E.maxhp/2 + 2, 6))
+			pygame.draw.rect(DISPLAYSURF, colors["hpbar"], pygame.Rect(E.x - E.maxhp/4 + 8, E.y - 7, E.hp/2, 4))
 	
 	#if dead
 	elif GameOver:
@@ -336,9 +334,6 @@ class playermovement:
 		
 	
 	def right():
-		
-		for E in enemies:
-			E.hp = E.hp-1
 		#if not going off screen or hitting wall then walk
 		if Player["x"] + 16 < 632:
 			if playermovement.checkwalls("x", 1):
@@ -395,24 +390,33 @@ while True:
 			
 			#what key is it
 			#checks for mevement with the arrow keys
-			if event.key == pygame.K_RIGHT:
-				playermovement.right()
-			if event.key == pygame.K_LEFT:
-				playermovement.left()
-			if event.key == pygame.K_UP:
-				playermovement.up()
-			if event.key == pygame.K_DOWN:
-				playermovement.down()
-			if event.key == pygame.K_w:
-				Player["direction"] = "up"
-			if event.key == pygame.K_a:
-				Player["direction"] = "left"
-			if event.key == pygame.K_s:
-				Player["direction"] = "down"
 			if event.key == pygame.K_d:
+				playermovement.right()
+			if event.key == pygame.K_a:
+				playermovement.left()
+			if event.key == pygame.K_w:
+				playermovement.up()
+			if event.key == pygame.K_s:
+				playermovement.down()
+			if event.key == pygame.K_UP:
+				Player["direction"] = "up"
+			if event.key == pygame.K_LEFT:
+				Player["direction"] = "left"
+			if event.key == pygame.K_DOWN:
+				Player["direction"] = "down"
+			if event.key == pygame.K_RIGHT:
 				Player["direction"] = "right"
 			if event.key == pygame.K_e:
-				Gun.shoot(Player, enemies)
+				gun.shoot(Player, enemies)
+			if event.key == pygame.K_r:
+				if Player["ammo"] > 12:
+					gun.reload(12)
+					Player["ammo"] = Player["ammo"] - 12
+				elif Player["ammo"] > 0:
+					gun.reload(Player["ammo"])
+					Player["ammo"] = 0
+				else:
+					displayammowarning = True
 				
 		
 		#if you press the little cross at the top
@@ -420,7 +424,8 @@ while True:
 			
 			pygame.quit()
 			sys.exit()		
-	
+
+	doUpdate()
 	
 	#draw stuff onto the screen and update
 	draw()
