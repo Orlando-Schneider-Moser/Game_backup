@@ -4,6 +4,8 @@ import Items
 #please dont read this
 
 
+displayammowarning = False
+
 #how to make a dictionary
 #a = {"b":"beans"}
 #print(a["b"])
@@ -32,7 +34,7 @@ inStart = False
 inMenu = False
 inInventory = False
 GameOver= False
-displayammowarning = False
+
 
 #display
 DISPLAYSURF = pygame.display.set_mode((640, 360))
@@ -45,6 +47,9 @@ Time= pygame.time.Clock()
 #Then a rectangle for the font to be displayed on.
 Gameovr_fnt = pygame.font.SysFont("Garamond", 64)
 Gameovr_rect = pygame.Rect(320-(Gameovr_fnt.size("GAME OVER")[0])/2,180-(Gameovr_fnt.size("GAME OVER")[1])/2,100, 100)
+
+ui_fnt = pygame.font.SysFont("Verdana", 14)
+noammo_rect = pygame.Rect(640-ui_fnt.size("NO AMMO")[0], 360-ui_fnt.size("NO AMMO")[1], ui_fnt.size("NO AMMO")[0]*1, ui_fnt.size("NO AMMO")[1]*1)
 
 colors = {
 	"zombie":(40, 240, 20),
@@ -67,11 +72,21 @@ Player = {
 	"maxhp":64,
 	"direction":"Right",
 	"ammo":12,
-	"maxammo": 96
+	"maxammo": 48
 }
 #- - - - - - - - - - - - - - - - - 
 
-gun = Items.GUN(12)
+gun = Items.GUN(6, 6)
+
+revolver_img = [
+	pygame.image.load('./Images/Revolver_0.png'),
+	pygame.image.load('./Images/Revolver_1.png'),
+	pygame.image.load('./Images/Revolver_2.png'),
+	pygame.image.load('./Images/Revolver_3.png'),
+	pygame.image.load('./Images/Revolver_4.png'),
+	pygame.image.load('./Images/Revolver_5.png'),
+	pygame.image.load('./Images/Revolver_6.png')
+]
 
 #===============================
 
@@ -262,6 +277,11 @@ def draw():
 		
 		#draw the hp bar so that it goes down to the left(explanations for more)
 		pygame.draw.rect(DISPLAYSURF, (255, 1, 1), pygame.Rect(640-x.x4(Player["health"])-4, 4, x.x4(Player["health"]), 14))
+		#ammo bar
+		pygame.draw.rect(DISPLAYSURF, (255, 255, 1), pygame.Rect(640-Player["ammo"]/Player["maxammo"]*256-4, 20, Player["ammo"]/Player["maxammo"]*256 , 14))
+
+		DISPLAYSURF.blit(ui_fnt.render("HP:",False, (255, 255, 255)), pygame.Rect(370-ui_fnt.size("HP:")[0] + 5, 3, ui_fnt.size("HP:")[0], ui_fnt.size("HP:")[1]))
+		DISPLAYSURF.blit(ui_fnt.render("Ammo:",False, (255, 255, 255)), pygame.Rect(370-ui_fnt.size("Ammo:")[0] + 5 , 23, ui_fnt.size("Ammo:")[0], ui_fnt.size("Ammo:")[1]))
 		
 		#draw every wall
 		for wall in walllist:
@@ -275,6 +295,13 @@ def draw():
 			pygame.draw.rect(DISPLAYSURF, E.color, pygame.Rect(E.x, E.y, E.w, E.h))
 			pygame.draw.rect(DISPLAYSURF, colors["hpbarbg"], pygame.Rect(E.x - E.maxhp/4 + 7, E.y - 8, E.maxhp/2 + 2, 6))
 			pygame.draw.rect(DISPLAYSURF, colors["hpbar"], pygame.Rect(E.x - E.maxhp/4 + 8, E.y - 7, E.hp/2, 4))
+		if gun.inmag >= 0:
+			DISPLAYSURF.blit(revolver_img[gun.inmag], (4, 4))
+		else:
+			DISPLAYSURF.blit(revolver_img[0], (4, 4))
+
+		if displayammowarning:
+			DISPLAYSURF.blit(ui_fnt.render("NO AMMO", False, (255, 0, 0)), noammo_rect)
 	
 	#if dead
 	elif GameOver:
@@ -360,6 +387,8 @@ class playermovement:
 
 walls.makewalls()
 def doUpdate():
+	#idk why it doesnt work without this. python strange
+	global displayammowarning
 	#check for gameover
 	if Player["health"] <= 0:
 	
@@ -374,6 +403,10 @@ def doUpdate():
 
 	for bullet in Items.GUN.bullets:
 		bullet.checkhit(enemies)
+
+	if displayammowarning == True:
+		if Player["ammo"] > 0:
+			displayammowarning = False
 	
 			
 #game loop
@@ -409,15 +442,18 @@ while True:
 			if event.key == pygame.K_e:
 				gun.shoot(Player, enemies)
 			if event.key == pygame.K_r:
-				if Player["ammo"] > 12:
-					gun.reload(12)
-					Player["ammo"] = Player["ammo"] - 12
-				elif Player["ammo"] > 0:
-					gun.reload(Player["ammo"])
-					Player["ammo"] = 0
-				else:
-					displayammowarning = True
-				
+				if gun.inmag <= 0:
+					if Player["ammo"] > 6:
+						gun.reload(6)
+						print(gun.inmag)
+						Player["ammo"] = Player["ammo"] - 6
+					elif Player["ammo"] > 0:
+						gun.reload(Player["ammo"])
+						Player["ammo"] = 0
+					else:
+						displayammowarning = True
+				else: pass
+					
 		
 		#if you press the little cross at the top
 		if event.type == QUIT:

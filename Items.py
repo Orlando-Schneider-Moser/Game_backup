@@ -36,11 +36,12 @@ class bullet:
 
 class GUN:
 	bullets = []
-	def __init__(self, magsize):
-		self.inmag = magsize
+	def __init__(self, inmag, magsize):
+		self.inmag = inmag
+		self.magsize = magsize
 
 	def reload(self, x):
-		self.inmag = 12
+		self.inmag = x
 		
 	def shoot(self, player, enemies):
 		
