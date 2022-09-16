@@ -149,6 +149,20 @@ class walls:
 
 enemies = []
 
+speed = [
+	random.randrange(6,8), random.randrange(4,6), 3, 2, 1
+]
+hp = [
+	random.randrange(50, 70, 10), random.randrange(40, 50, 10), random.randrange(20,30, 10), random.randrange(15,25, 5), random.randrange(5,10, 5)
+]
+damage = [
+	24, 20, random.randrange(14, 18, 2), random.randrange(8,12,2),5
+]
+monsters = {
+		"zombie1":[speed[0], hp[2], damage[2]],
+		"zombie2":[speed[1], hp[4], damage[3]]
+	}
+
 class enemy:
 	## you can now make an enemy with:
 	#enemy1 = enemy(xpos, ypox, w, h, (color in rgb), "type of enemy")
@@ -156,20 +170,24 @@ class enemy:
 	## so you can just say enemy1.x to change the x var
 	# enemy1.x += 16
 	## you have just changed its x axis
-	def __init__ (self, x, y, width, heigth, color, type, hp):
+	def __init__ (self, x, y, width, heigth, color, type, hp, damage):
 		self.x = x
 		self.y = y
 		self.w = width
 		self.h = heigth
 		self.color = color
 		self.type = type
-		self.hp = hp
-		self.maxhp = hp
+		self.hp = monsters[type][hp]
+		self.maxhp = monsters[type][hp]
 		self.a = 4
+		self.damage = monsters[type][damage]
+
 
 	def checkdeath(self):
 		if self.hp <= 0:
-			enemies.append(enemy(16*random.randrange(1, 10), 16*random.randrange(1, 10) + 40, 16, 16, colors["zombie"], "zombie", random.choice((20, 30, 40, 50))))
+			#if random.choice(enemy.monsters["zombie1"], enemy.monsters["zombie2"]) == enemy.monsters["zombie1"]:
+			if 1 == 1:
+				enemies.append(enemy(random.randrange(1, 20)* 16, random.randrange(1,15)*16+40, 16, 16, colors["zombie"], "zombie1",2 , 2))
 			enemies.remove(self)
 
 	def move(self):
@@ -251,7 +269,7 @@ class enemy:
 			self.a = self.a + 1
 
 
-enemies.append(enemy(32, 104, 16, 16, colors["zombie"], "zombie", 20))
+enemies.append(enemy(32, 104, 16, 16, colors["zombie"], "zombie1", 2, 2))
 	
 
 		
@@ -399,7 +417,8 @@ def doUpdate():
 
 	for E in enemies:
 		E.checkdeath()
-		E.move2player(16)
+		E.move2player(monsters[E.type][0])
+		
 
 	for bullet in Items.GUN.bullets:
 		bullet.checkhit(enemies)
